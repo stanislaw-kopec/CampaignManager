@@ -1,6 +1,5 @@
 package com.campaign.manager.model;
 
-import com.campaign.manager.entity.CampaignStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
