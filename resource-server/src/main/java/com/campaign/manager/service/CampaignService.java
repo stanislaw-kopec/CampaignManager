@@ -27,17 +27,18 @@ public class CampaignService {
     private final TownRepository townRepository;
     private final UserRepository userRepository;
     private final EmeraldAccountService emeraldAccountService;
+    private final UserService userService;
 
-    public CampaignService(CampaignRepository campaignRepository, KeywordRepository keywordRepository, TownRepository townRepository, UserRepository userRepository, EmeraldAccountService emeraldAccountService) {
+    public CampaignService(CampaignRepository campaignRepository, KeywordRepository keywordRepository, TownRepository townRepository, UserRepository userRepository, EmeraldAccountService emeraldAccountService, UserService userService) {
         this.campaignRepository = campaignRepository;
         this.keywordRepository = keywordRepository;
         this.townRepository = townRepository;
         this.userRepository = userRepository;
         this.emeraldAccountService = emeraldAccountService;
+        this.userService = userService;
     }
 
     public List<CampaignDTO> getAllCampaigns() {
-
         return campaignRepository.findAll()
                 .stream()
                 .map(this::mapToDTO)
@@ -45,15 +46,14 @@ public class CampaignService {
     }
 
     public CampaignDTO getCampaignById(Long id) {
-
         Campaign campaign = campaignRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Campaign not found"));
-
         return mapToDTO(campaign);
     }
 
     @Transactional
     public CampaignDTO createCampaign(CampaignRequestDTO request) {
+        userService.validateUserHasEmeraldAccount(request.getUserId());
 
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -73,7 +73,6 @@ public class CampaignService {
         );
 
         Campaign campaign = new Campaign();
-
         campaign.setCampaignName(request.getCampaignName());
         campaign.setKeywords(keywords);
         campaign.setBidAmount(request.getBidAmount());
@@ -84,13 +83,11 @@ public class CampaignService {
         campaign.setUser(user);
 
         Campaign saved = campaignRepository.save(campaign);
-
         return mapToDTO(saved);
     }
 
     @Transactional
     public void deleteCampaign(Long id) {
-
         Campaign campaign = campaignRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Campaign not found"));
 
@@ -104,7 +101,6 @@ public class CampaignService {
 
     @Transactional
     public CampaignDTO updateCampaign(Long id, CampaignRequestDTO request) {
-
         Campaign campaign = campaignRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Campaign not found"));
 
@@ -118,25 +114,14 @@ public class CampaignService {
                 .collect(Collectors.toSet());
 
         User user = campaign.getUser();
-
         BigDecimal oldFund = campaign.getCampaignFund();
         BigDecimal newFund = request.getCampaignFund();
-
         BigDecimal difference = newFund.subtract(oldFund);
 
         if (difference.compareTo(BigDecimal.ZERO) > 0) {
-
-            emeraldAccountService.deductFunds(
-                    user.getEmeraldAccount(),
-                    difference
-            );
-
+            emeraldAccountService.deductFunds(user.getEmeraldAccount(), difference);
         } else if (difference.compareTo(BigDecimal.ZERO) < 0) {
-
-            emeraldAccountService.refundFunds(
-                    user.getEmeraldAccount(),
-                    difference.abs()
-            );
+            emeraldAccountService.refundFunds(user.getEmeraldAccount(), difference.abs());
         }
 
         campaign.setCampaignName(request.getCampaignName());
@@ -148,31 +133,25 @@ public class CampaignService {
         campaign.setRadius(request.getRadius());
 
         Campaign updated = campaignRepository.save(campaign);
-
         return mapToDTO(updated);
     }
 
     private CampaignDTO mapToDTO(Campaign campaign) {
-
         CampaignDTO dto = new CampaignDTO();
-
         dto.setId(campaign.getId());
         dto.setCampaignName(campaign.getCampaignName());
-
         dto.setKeywords(
                 campaign.getKeywords()
                         .stream()
                         .map(Keyword::getName)
                         .collect(Collectors.toSet())
         );
-
         dto.setBidAmount(campaign.getBidAmount());
         dto.setCampaignFund(campaign.getCampaignFund());
         dto.setStatus(campaign.getStatus());
         dto.setTown(campaign.getTown().getName());
         dto.setRadius(campaign.getRadius());
         dto.setUsername(campaign.getUser().getUsername());
-
         return dto;
     }
 
