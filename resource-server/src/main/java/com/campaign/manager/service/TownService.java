@@ -1,5 +1,6 @@
 package com.campaign.manager.service;
 
+import com.campaign.manager.exception.ResourceInUseException;
 import com.campaign.manager.model.Town;
 import com.campaign.manager.repository.TownRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -44,7 +45,24 @@ public class TownService {
         if (!townRepository.existsById(id)) {
             throw new EntityNotFoundException("Town not found with id: " + id);
         }
+
+        long usageCount = townRepository.countCampaignsUsingTown(id);
+        if (usageCount > 0) {
+            List<Long> campaignIds = townRepository.findCampaignIdsUsingTown(id);
+            throw new ResourceInUseException("town", id, (int) usageCount);
+        }
+
         townRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isTownInUse(Long id) {
+        return townRepository.countCampaignsUsingTown(id) > 0;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> getCampaignsUsingTown(Long id) {
+        return townRepository.findCampaignIdsUsingTown(id);
     }
 
 }

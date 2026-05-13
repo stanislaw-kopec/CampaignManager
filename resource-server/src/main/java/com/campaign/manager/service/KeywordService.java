@@ -1,5 +1,6 @@
 package com.campaign.manager.service;
 
+import com.campaign.manager.exception.ResourceInUseException;
 import com.campaign.manager.model.Keyword;
 import com.campaign.manager.repository.KeywordRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -49,6 +50,23 @@ public class KeywordService {
         if (!keywordRepository.existsById(id)) {
             throw new EntityNotFoundException("Keyword not found with id: " + id);
         }
+
+        long usageCount = keywordRepository.countCampaignsUsingKeyword(id);
+        if (usageCount > 0) {
+            List<Long> campaignIds = keywordRepository.findCampaignIdsUsingKeyword(id);
+            throw new ResourceInUseException("keyword", id, (int) usageCount);
+        }
+
         keywordRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isKeywordInUse(Long id) {
+        return keywordRepository.countCampaignsUsingKeyword(id) > 0;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> getCampaignsUsingKeyword(Long id) {
+        return keywordRepository.findCampaignIdsUsingKeyword(id);
     }
 }

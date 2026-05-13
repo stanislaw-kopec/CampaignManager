@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/towns")
@@ -76,6 +77,26 @@ public class TownController {
     })
     public void deleteTown(@PathVariable Long id) {
         townService.deleteTown(id);
+    }
+
+    @GetMapping("/{id}/usage")
+    @Operation(summary = "Check town usage", description = "Returns list of campaign IDs using this town")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usage information retrieved"),
+            @ApiResponse(responseCode = "404", description = "Town not found")
+    })
+    public Map<String, Object> getTownUsage(@PathVariable Long id) {
+        townService.getTownById(id);
+
+        boolean inUse = townService.isTownInUse(id);
+        List<Long> campaignIds = townService.getCampaignsUsingTown(id);
+
+        return Map.of(
+                "townId", id,
+                "inUse", inUse,
+                "campaignCount", campaignIds.size(),
+                "campaignIds", campaignIds
+        );
     }
 
 }

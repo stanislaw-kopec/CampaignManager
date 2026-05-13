@@ -1,9 +1,6 @@
 package com.campaign.manager.controller;
 
-import com.campaign.manager.exception.DuplicateUsernameException;
-import com.campaign.manager.exception.EmeraldAccountAlreadyExistsException;
-import com.campaign.manager.exception.InsufficientFundsException;
-import com.campaign.manager.exception.NoEmeraldAccountException;
+import com.campaign.manager.exception.*;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -62,6 +59,18 @@ public class GlobalExceptionHandler {
         Map<String, Object> response = new HashMap<>();
         response.put("timestamp", LocalDateTime.now());
         response.put("error", ex.getMessage());
+        return response;
+    }
+
+    @ExceptionHandler(ResourceInUseException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, Object> handleResourceInUse(ResourceInUseException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("error", ex.getMessage());
+        response.put("resourceType", ex.getResourceType());
+        response.put("resourceId", ex.getResourceId());
+        response.put("usageCount", ex.getUsageCount());
         return response;
     }
 

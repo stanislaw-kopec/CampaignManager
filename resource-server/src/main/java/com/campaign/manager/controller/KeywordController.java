@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/keywords")
@@ -81,6 +82,26 @@ public class KeywordController {
     })
     public void deleteKeyword(@PathVariable Long id) {
         keywordService.deleteKeyword(id);
+    }
+
+    @GetMapping("/{id}/usage")
+    @Operation(summary = "Check keyword usage", description = "Returns list of campaign IDs using this keyword")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usage information retrieved"),
+            @ApiResponse(responseCode = "404", description = "Keyword not found")
+    })
+    public Map<String, Object> getKeywordUsage(@PathVariable Long id) {
+        keywordService.getKeywordById(id);
+
+        boolean inUse = keywordService.isKeywordInUse(id);
+        List<Long> campaignIds = keywordService.getCampaignsUsingKeyword(id);
+
+        return Map.of(
+                "keywordId", id,
+                "inUse", inUse,
+                "campaignCount", campaignIds.size(),
+                "campaignIds", campaignIds
+        );
     }
 
 }
