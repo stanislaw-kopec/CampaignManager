@@ -2,9 +2,11 @@ package com.campaign.manager.service;
 
 import com.campaign.manager.dto.EmeraldAccountDTO;
 import com.campaign.manager.dto.EmeraldBalanceDTO;
+import com.campaign.manager.dto.TopUpResponseDTO;
 import com.campaign.manager.dto.UserDTO;
 import com.campaign.manager.exception.DuplicateUsernameException;
 import com.campaign.manager.exception.EmeraldAccountAlreadyExistsException;
+import com.campaign.manager.exception.NoEmeraldAccountException;
 import com.campaign.manager.model.EmeraldAccount;
 import com.campaign.manager.model.User;
 import com.campaign.manager.repository.EmeraldAccountRepository;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -123,6 +126,34 @@ public class UserService {
                     "User '" + user.getUsername() + "' does not have an emerald account. Please create one first."
             );
         }
+    }
+
+    @Transactional
+    public TopUpResponseDTO topUpBalance(Long userId, BigDecimal amount) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        if (user.getEmeraldAccount() == null) {
+            throw new NoEmeraldAccountException(
+                    "User '" + user.getUsername() + "' does not have an emerald account. Please create one first."
+            );
+        }
+
+        EmeraldAccount account = user.getEmeraldAccount();
+        BigDecimal balanceBefore = account.getBalance();
+
+        // Dodanie środków
+        account.setBalance(balanceBefore.add(amount));
+        emeraldAccountRepository.save(account);
+
+        return new TopUpResponseDTO(
+                user.getId(),
+                user.getUsername(),
+                amount,
+                balanceBefore,
+                account.getBalance(),
+                LocalDateTime.now()
+        );
     }
 
     private UserDTO mapToDTO(User user) {

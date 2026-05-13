@@ -1,9 +1,6 @@
 package com.campaign.manager.controller;
 
-import com.campaign.manager.dto.CreateUserRequestDTO;
-import com.campaign.manager.dto.EmeraldBalanceDTO;
-import com.campaign.manager.dto.UpdateUserRequestDTO;
-import com.campaign.manager.dto.UserDTO;
+import com.campaign.manager.dto.*;
 import com.campaign.manager.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -89,6 +86,20 @@ public class UserController {
     })
     public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
+    }
+
+    @PostMapping("/{id}/top-up")
+    @Operation(summary = "Top up emerald balance", description = "Adds funds to user's emerald account")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Balance topped up successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid amount or no emerald account"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public TopUpResponseDTO topUpBalance(
+            @PathVariable Long id,
+            @Valid @RequestBody TopUpRequestDTO request
+    ) {
+        return userService.topUpBalance(id, request.getAmount());
     }
 
     @PostMapping("/{id}/emerald-account")
