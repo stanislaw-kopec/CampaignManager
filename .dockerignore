@@ -1,0 +1,19 @@
+# Backend
+resource-server/target/
+resource-server/.mvn/
+resource-server/.idea/
+resource-server/*.iml
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vscode/
+
+
+**/.git
+**/.gitignore
+**/README.md
+**/.env
+**/docker-compose.yml
+**/Dockerfile
+**/.dockerignore
