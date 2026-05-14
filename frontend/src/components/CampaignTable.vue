@@ -28,8 +28,8 @@
               <td>{{ campaign.id }}</td>
               <td>{{ campaign.campaignName }}</td>
               <td>{{ campaign.keywords?.join(', ') || '-' }}</td>
-              <td>{{ campaign.bidAmount }} PLN</td>
-              <td>{{ campaign.campaignFund }} PLN</td>
+              <td>{{ campaign.bidAmount }} </td>
+              <td>{{ campaign.campaignFund }} </td>
               <td>
                 <span :class="'badge ' + (campaign.status === 'ON' ? 'bg-success' : 'bg-secondary')">
                   {{ campaign.status }}

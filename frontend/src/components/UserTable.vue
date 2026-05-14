@@ -27,7 +27,7 @@
                   {{ user.hasEmeraldAccount ? 'Active' : 'None' }}
                 </span>
               </td>
-              <td>{{ user.emeraldBalance || 0 }} PLN</td>
+              <td>{{ user.emeraldBalance || 0 }}</td>
               <td>{{ user.campaignCount || 0 }}</td>
               <td>
                 <button class="btn btn-sm btn-warning me-1" @click="$emit('edit', user)">Edit</button>
